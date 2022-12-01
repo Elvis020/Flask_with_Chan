@@ -19,7 +19,8 @@ class Restaurants(Base):
     modified_time = Column(DateTime(), nullable=False)
     histories = relationship(
         'Histories',
-        backref='restaurants'
+        backref='restaurants',
+        cascade='all,delete'
     )
 
     def __init__(self, name, description, site_url):

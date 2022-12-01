@@ -2,6 +2,7 @@ import datetime
 from random import choice
 
 from flask import Flask, render_template, request, redirect
+from sqlalchemy import desc
 
 from db.database import init_db, db_session
 from models.histories import Histories
@@ -23,7 +24,7 @@ def shutdown_session(exception=None):
 @app.route("/")
 def start():
     now = datetime.datetime.now()
-    return render_template('start.html', now=now)
+    return render_template('start.html', nav='start', now=now)
 
 
 @app.route("/draw")
@@ -67,7 +68,7 @@ def create_restaurant():
 @app.route("/restaurants")
 def restaurant_list():
     restaurants = Restaurants.query.all()
-    return render_template('restaurant.html', restaurants=restaurants)
+    return render_template('restaurant.html', nav='restaurants', restaurants=restaurants)
 
 
 @app.route("/delete-restaurant")
@@ -101,6 +102,23 @@ def edit_restaurant():
     return render_template("edit-restaurant.html", restaurant=restaurant)
 
 
+@app.route("/history")
+def history():
+    histories = Histories.query.order_by(desc(Histories.created_time)).limit(20)
+    return render_template('history.html', nav='history', histories=histories)
+
+
+@app.route("/top")
+def top():
+    restaurants = Restaurants.query.order_by(desc('draw')).limit(5)
+
+    return render_template('top.html',nav='top', restaurants=restaurants)
+
+
+def date_time_format(value):
+    return value.strftime('%Y-%m-%d %H:%M:%S')
+
+
 def meal_format(value):
     if value.hour in range(4, 10):
         return "Breakfast"
@@ -112,5 +130,6 @@ def meal_format(value):
 
 
 app.jinja_env.filters['meal'] = meal_format
+app.jinja_env.filters['datetime'] = date_time_format
 app.jinja_env.auto_reload = True
 app.run(debug=True)
